@@ -49,14 +49,8 @@ error_and_exit() {
 }
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
-export concourseUrl=${concourseUrl:-http://192.168.100.4:8080}
-echo "Concourse Url ${concourseUrl}"
-export concourseTarget=${concourseTarget:-lite}
-echo "Concourse API target ${concourseTarget}"
-export pipelineName=${pipelineName:-`basename $DIR`}
-echo "Pipeline Name ${pipelineName}"
-export teamName=${teamName:-main}
-echo "Team Name ${teamName}"
+concourseTarget=${concourseTarget:-lite}
+pipelineName=${pipelineName:-`basename $DIR`}
 
 realpath() {
     [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
@@ -68,16 +62,15 @@ usage() {
 }
 
 loginFlags=
-if [ -n "${teamName}" ]; then
-  loginFlags="-n ${teamName}"
-fi
+if [ -n "${username}" ]; then
+  # only log in if we got a username
+  concourseUrl=${concourseUrl:-http://192.168.100.4:8080}
+  teamName=${teamName:-main}
+  loginFlags="${loginFlags} -c ${concourseUrl} -n ${teamName} -u ${username}"
 
-if [ -u "${userName}" ]; then
-  loginFlags="-u ${userName}"
-fi
-
-if [ -s "${password}" ]; then
-  loginFlags="-p ${password}"
+  if [ -n "${password}" ]; then
+    loginFlags="${loginFlags} -p ${password}"
+  fi
 fi
 
 if [ -z "${credentialsFile}" ]; then
@@ -88,9 +81,11 @@ if [ ! -f ${credentialsFile} ]; then
   usage
 fi
 
-
-pushd $DIR
-  fly -t ${concourseTarget} login -c ${concourseUrl} ${loginFlags}
+pushd $DIR > /dev/null
+  if [[ -n "${username}" ]]; then
+    # only log in if we got a username
+    fly -t ${concourseTarget} login ${loginFlags}
+  fi
   fly -t ${concourseTarget} set-pipeline -p ${pipelineName} --config ${DIR}/ci/pipeline.yml --load-vars-from ${DIR}/ci/properties.yml --load-vars-from ${credentialsFile}
   fly -t ${concourseTarget} unpause-pipeline --pipeline ${pipelineName}
-popd
+popd > /dev/null
