@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
       username=$2
       shift
       ;;
-    -p | --password )
+    -s | --password )
       password=$2
       shift
       ;;
@@ -64,15 +64,19 @@ realpath() {
 
 usage() {
   me=$(basename ${0})
-  echo "USAGE: ${me} [-t <target>] -p <pipeline-name> -c <credentials-yml>"
+  echo "USAGE: ${me} [-t <target>] [-p <pipeline-name>] [-n team-name] [-u <username>] [-s <password>]  [-z <credentials-yml>]"
 }
 
 loginFlags=
-if [ -n "${userName}" ]; then
+if [ -n "${teamName}" ]; then
+  loginFlags="-n ${teamName}"
+fi
+
+if [ -u "${userName}" ]; then
   loginFlags="-u ${userName}"
 fi
 
-if [ -n "${password}" ]; then
+if [ -s "${password}" ]; then
   loginFlags="-p ${password}"
 fi
 
@@ -86,7 +90,7 @@ fi
 
 
 pushd $DIR
-  fly -t ${concourseTarget} login -c ${concourseUrl} -n ${teamName} ${loginFlags}
+  fly -t ${concourseTarget} login -c ${concourseUrl} ${loginFlags}
   fly -t ${concourseTarget} set-pipeline -p ${pipelineName} --config ${DIR}/ci/pipeline.yml --load-vars-from ${DIR}/ci/properties.yml --load-vars-from ${credentialsFile}
   fly -t ${concourseTarget} unpause-pipeline --pipeline ${pipelineName}
 popd
