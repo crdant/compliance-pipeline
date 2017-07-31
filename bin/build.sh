@@ -46,7 +46,6 @@ usage() {
 }
 
 pushd $DIR
-  fly -t ${concourseTarget} login
   fly -t ${concourseTarget} trigger-job -j ${pipelineName}/${jobName}
   fly -t ${concourseTarget} watch -j ${pipelineName}/${jobName}
 popd
