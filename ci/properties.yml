@@ -1,3 +1,5 @@
 application: hello-quality
 git-uri: https://github.com/crdant/hello-quality
 git-branch: master
+version-endpoint: https://storage.googleapis.com
+version-bucket: hello-quality-version-bucket

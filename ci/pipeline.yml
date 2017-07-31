@@ -2,7 +2,8 @@ groups:
   - name: develop
     jobs:
       - unit-test
-
+      - rc
+      
 jobs:
   - name: unit-test
     public: true
@@ -12,6 +13,18 @@ jobs:
       - task: unit
         file: source/ci/tasks/unit.yml
 
+  - name: rc
+    public: true
+    serial_groups: [version]
+    plan:
+    - get: source
+      trigger: true
+      passed: [unit-test]
+    - get: version
+      params: {pre: rc}
+    - put: version
+      params: {file: version/version}
+
 resources:
   - name: source
     type: git
@@ -20,3 +33,12 @@ resources:
       branch: ((git-branch))
       username: ((git-username))
       password: ((git-password))
+
+  - name: version
+    type: semver
+    source:
+      key: current-version
+      bucket: ((version-bucket))
+      endpoint: ((version-endpoint))
+      access_key_id: ((version-access-key-id))
+      secret_access_key: ((version-secret-access-key))
