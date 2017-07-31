@@ -1,0 +1,22 @@
+groups:
+  - name: develop
+    jobs:
+      - unit-test
+
+jobs:
+  - name: unit-test
+    public: true
+    plan:
+      - get: source
+        trigger: true
+      - task: unit
+        file: source/ci/tasks/unit.yml
+
+resources:
+  - name: source
+    type: git
+    source:
+      uri: ((git-uri))
+      branch: ((git-branch))
+      username: ((git-username))
+      password: ((git-password))
